@@ -28,7 +28,7 @@ Although the fee paid to the Primary Network to operate a Subnet does not go up 
 
 Elastic Subnets, introduced in [Banff](https://medium.com/avalancheavax/banff-elastic-subnets-44042f41e34c), enabled Subnet creators to activate Proof-of-Stake validation and uptime-based rewards using their own token. However, this token is required to be an ANT (created on the X-Chain) and locked on the P-Chain. All staking rewards were distributed on the P-Chain with the reward curve being defined in the `TransformSubnetTx` and, once set, was unable to be modified.
 
-With no Elastic Subnets live on Mainnet, it is clear that Permissionless Subnets as they stand today could be more desirable. There are many successful Permissioned Subnets in production but many Subnet creators have raised the above as points of concern. In summary, the Avalanche community could benefit from a more flexible and affordable mechanism to launch Permissionless Subnets.
+With no Elastic Subnets live on Mainnet, it is clear that permissionless Sovereign Subnets as they stand today could be more desirable. There are many successful Permissioned Subnets in production but many Subnet creators have raised the above as points of concern. In summary, the Avalanche community could benefit from a more flexible and affordable mechanism to launch Sovereign Subnets.
 
 ## Specification
 
@@ -46,13 +46,13 @@ For standalone networks like the Avalanche Primary Network, this is done by conn
 
 By separating Subnet Validators from Primary Network Validators, a list of validator IPs to connect to (the functional bootstrappers of the Subnet) is no longer provided by simply connecting to the Primary Network Validators. However, the Primary Network can enable nodes tracking a Subnet to seamlessly connect to the Subnet Validators by tracking and gossiping Subnet Validator IPs. Subnets will not need to operate and maintain a set of bootstrappers and can continue to rely on the Primary Network for peer discovery.
 
-### Setting a Subnet Manager
+### Setting a Validator Manager
 
 To create a Subnet, a `CreateSubnetTx` must be issued on the P-Chain. This transaction includes an `Owner` field which defines the key that must be used to authorize any validator set additions (`AddSubnetValidatorTx`) or removals (`RemoveSubnetValidatorTx`).
 
-To be a Permissionless Subnet, this `Owner` key must no longer have the ability to modify the Subnet's validator set. A `ConvertSubnetTx` must first be issued to explicitly convert a Subnet from Permissioned to Permissionless. This transaction will set the `(chainID, address)` pair that will manage the Subnet going forward. After `ConvertSubnetTx` is issued, the `Owner` from the `CreateSubnetTx` that created the Subnet will no longer have the ability to modify the Subnet's validator set.
+To be a Sovereign Subnet, this `Owner` key must no longer have the ability to modify the Subnet's validator set. A `ConvertSubnetTx` must first be issued to explicitly convert a Subnet from having the validator set managed on the P-Chain to having the validator set managed sovereignly on an L1. This transaction will set the `(chainID, address)` pair that will manage the Subnet going forward. After `ConvertSubnetTx` is issued, the `Owner` from the `CreateSubnetTx` that created the Subnet will no longer have the ability to modify the Subnet's validator set. 
 
-To provide maximal flexibility for Permissionless Subnets, the BLS multisignature approach in Avalanche Warp Messaging (AWM) is re-used to approve modifications to the Subnet's validator set. Using the `(chainID, address)` pair defined in the `ConvertSubnetTx`, a Warp Message with an [`AddressedCall`](https://github.com/ava-labs/avalanchego/tree/master/vms/platformvm/warp/payload#addressedcall) payload can be constructed.
+Instead of the `Owner`, from there on Avalanche Warp Messages are used to authorize modifications to the Subnet's validator set. This provides maximal flexibility for Sovereign Subnets. Using the `(chainID, address)` pair defined in the `ConvertSubnetTx`, a Warp Message with an [`AddressedCall`](https://github.com/ava-labs/avalanchego/tree/master/vms/platformvm/warp/payload#addressedcall) payload can be constructed.
 
 To validate an `AddressedCall` payload in Avalanche Warp Messaging, the `(chainID, address)` pair is used to lookup the validators of `chainID` and verify that the BLS multi-sig includes a quorum (set to 67%) of the Subnet's validator set. The P-Chain will use Warp Messages with `AddressedCall` payloads to support modifications of the Subnet's validator set using this `(chainID, address)` pair (using the `RegisterSubnetValidatorTx` and `SetSubnetValidatorWeightTx` defined later in the specification).
 
@@ -83,10 +83,10 @@ type ConvertSubnetTx struct {
     // Restrictions:
     // - Must not be the Primary Network ID
     Subnet ids.ID `json:"subnetID"`
-    // BlockchainID where the Subnet manager lives
-    ChainID ids.ID `json:"chainID"`
-    // Address of the Subnet manager
-    Address []byte `json:"address"`
+    // BlockchainID where the Validator Manager lives
+    ChainID ids.ID `json:"ValidatorManagerChainID"`
+    // Address of the Validator Manager
+    Address []byte `json:"ValidatorManagerAddress"`
     // Initial pay-as-you-go validators for the Subnet
     Validators []SubnetValidator `json:"validators"`
     // Authorizes this conversion
@@ -115,17 +115,17 @@ The following serialization is defined as a `ValidatorData`:
 The following serialization is defined as the `SubnetConversionData`
 
 ```text
-+-------------------+--------------------------+-------------------------------------------------------+
-| convertSubnetTxID :                 [32]byte |                                              32 bytes |
-+-------------------+--------------------------+-------------------------------------------------------+
-|    managerChainID :                 [32]byte |                                              32 bytes |
-+-------------------+--------------------------+-------------------------------------------------------+
-|    managerAddress :                   []byte |                         4 + len(managerAddress) bytes |
-+-------------------+--------------------------+-------------------------------------------------------+
-|        validators :          []ValidatorData |                        4 + len(validators) * 88 bytes |
-+-------------------+--------------------------+-------------------------------------------------------+
-                                               | 72 + len(managerAddress) + len(validators) * 88 bytes |
-                                               +-------------------------------------------------------+
++-------------------------+--------------------+----------------------------------------------------------------+
+|       convertSubnetTxID :           [32]byte |                                                       32 bytes |
++-------------------------+--------------------+----------------------------------------------------------------+
+| validatorManagerChainID :           [32]byte |                                                       32 bytes |
++-------------------------+--------------------+----------------------------------------------------------------+
+| validatorManagerAddress :             []byte |                         4 + len(validatorManagerAddress) bytes |
++-------------------------+--------------------+----------------------------------------------------------------+
+|              validators :    []ValidatorData |                                 4 + len(validators) * 88 bytes |
++-------------------------+--------------------+----------------------------------------------------------------+
+                                               | 72 + len(validatorManagerAddress) + len(validators) * 88 bytes |
+                                               +----------------------------------------------------------------+
 ```
 
 Once a `ConvertSubnetTx` is accepted, P-Chain validators will be willing to sign a `SubnetConversionMessage`, specified as an `AddressedCall` with a empty `originSenderAddress` with the following payload.
@@ -487,7 +487,7 @@ A full reference implementation has not been provided yet. It will be provided o
 
 This ACP significantly reduces the cost of becoming a Subnet Validator. This can lead to a large increase in the number of Subnet Validators going forward. Each additional Subnet Validator adds consistent RAM usage to the P-Chain. However, this should be appropriately metered by the continuous fee mechanism outlined above.
 
-With the additional sovereignty Subnets gain from the P-Chain, Subnet staking tokens are no longer locked on the P-Chain for Permissionless Subnets. This poses a new security consideration for Subnet Validators: Malicious Subnets can choose to remove validators at will and take any funds that the Subnet Validator has on the Subnet. The P-Chain only provides the guarantee that Subnet Validators can retrieve the remaining $AVAX Balance for their Validator via a `DisableValidatorTx`. Any assets on the Subnet is entirely under the purview of the Subnet. The onus is now on Subnet Validators to vet the Subnet's security.
+With the additional sovereignty Subnets gain from the P-Chain, Subnet staking tokens are no longer locked on the P-Chain for Sovereign Subnets. This poses a new security consideration for Subnet Validators: Malicious Subnets can choose to remove validators at will and take any funds that the Subnet Validator has on the Subnet. The P-Chain only provides the guarantee that Subnet Validators can retrieve the remaining $AVAX Balance for their Validator via a `DisableValidatorTx`. Any assets on the Subnet is entirely under the purview of the Subnet. The onus is now on Subnet Validators to vet the Subnet's security.
 
 With a long window of expiry (48 hours) for the Warp message in `RegisterSubnetValidatorTx`, spam of Subnet Validator registration could lead to high memory pressure on the P-Chain. A future ACP can reduce the window of expiry if 48 hours proves to be a problem.
 
