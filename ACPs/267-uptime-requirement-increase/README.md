@@ -35,11 +35,7 @@ The same change would be applied to `genesis/genesis_fuji.go` and `genesis/genes
 
 ### Implementation Details
 
-The proposed change only raises the validator uptime requirement to 90%, with the uptime calculation
-method remaining unchanged. Validators are measured by their observed responsiveness during the
-staking period. Validators and their delegators will only receive rewards if the validator achieves
-at least 90% uptime; otherwise, they receive no rewards, maintaining the current all-or-nothing
-reward model with no partial payouts.
+The proposed change only raises the validator uptime requirement to 90%, with the uptime calculation method remaining unchanged. Validators are measured by their observed responsiveness during the staking period. Validators and their delegators will only receive rewards if the validator achieves at least 90% uptime; otherwise, they receive no rewards, maintaining the current all-or-nothing reward model with no partial payouts.
 
 ### Impact on Existing Validators
 
