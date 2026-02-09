@@ -17,7 +17,15 @@ The Avalanche Primary Network currently requires validators to maintain a minimu
 
 ### Need for Enhanced Network Reliability
 
-Higher validator uptime is essential for achieving further performance gains across the Avalanche Primary Network. Sustained validator availability ensures the network consistently processes transactions at optimal speed and minimizes bottlenecks caused by unresponsive nodes.
+Higher validator uptime is essential for achieving further performance gains across the Avalanche
+Primary Network. Even a small number of validators operating at 80% uptime can cause substantial
+network degradation, including increased latency in API endpoints and delayed block finalization.
+
+When the Snowman consensus protocol queries validators about a block, encountering too many
+non-responsive nodes among the sampled set causes the query to fail. This forces the protocol to
+issue additional queries, delaying block agreement and reducing overall network throughput. As a
+result, sustained validator availability is critical to ensure the network consistently processes
+transactions at optimal speed.
 
 ## Specification
 
@@ -39,6 +47,12 @@ The proposed change only raises the validator uptime requirement to 90%, with th
 
 ## Backwards Compatibility
 
-Uptime is tracked continuously throughout a validator's staking period and evaluated at the end when reward eligibility is determined. If this change activates mid-staking-period, validators would have their total accumulated uptime (from their original start time) compared against the new 90% threshold when their staking period ends.
+Each node continuously tracks its perceived uptime of its peers throughout the peer's validator staking period. At the end of the peer's validator staking period, each node sets its preference of whether or not to reward the peer based on its perceived uptime.
+
+If sufficient stake increases their peer uptime requirement in the middle of ongoing staking periods, those active validators would have their total accumulated uptime (from their original start time) compared against the new 90% threshold when their staking period ends.
 
 To give validators time to improve their infrastructure if needed, this ACP should be advertised broadly in the community.
+
+## Copyright
+
+Copyright and related rights waived via [CC0](https://creativecommons.org/publicdomain/zero/1.0/).
