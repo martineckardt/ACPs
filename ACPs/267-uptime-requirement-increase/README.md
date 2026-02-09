@@ -17,9 +17,7 @@ The Avalanche Primary Network currently requires validators to maintain a minimu
 
 ### Need for Enhanced Network Reliability
 
-Higher validator uptime is essential for achieving further performance gains across the Avalanche
-Primary Network. Sustained validator availability ensures the network consistently processes
-transactions at optimal speed and minimizes bottlenecks caused by unresponsive nodes.
+Higher validator uptime is essential for achieving further performance gains across the Avalanche Primary Network. Sustained validator availability ensures the network consistently processes transactions at optimal speed and minimizes bottlenecks caused by unresponsive nodes.
 
 ## Specification
 
