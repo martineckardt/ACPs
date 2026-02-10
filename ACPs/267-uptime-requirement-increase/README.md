@@ -17,15 +17,9 @@ The Avalanche Primary Network currently requires validators to maintain a minimu
 
 ### Need for Enhanced Network Reliability
 
-Higher validator uptime is essential for achieving further performance gains across the Avalanche
-Primary Network. Even a small number of validators operating at 80% uptime can cause substantial
-network degradation, including increased latency in API endpoints and delayed block finalization.
+Higher validator uptime is essential for achieving further performance gains across the Avalanche Primary Network. Even a small number of validators operating at 80% uptime can cause substantial network degradation, including increased latency in API endpoints and delayed block finalization.
 
-When the Snowman consensus protocol queries validators about a block, encountering too many
-non-responsive nodes among the sampled set causes the query to fail. This forces the protocol to
-issue additional queries, delaying block agreement and reducing overall network throughput. As a
-result, sustained validator availability is critical to ensure the network consistently processes
-transactions at optimal speed.
+When the Snowman consensus protocol queries validators about a block, encountering too many non-responsive nodes among the sampled set causes the query to fail. This forces the protocol to issue additional queries, delaying block agreement and reducing overall network throughput. As a result, sustained validator availability is critical to ensure the network consistently processes transactions at optimal speed.
 
 ## Specification
 
